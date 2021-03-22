@@ -1,8 +1,15 @@
-// Base styles
-@import "base";
+// Tailwind styles
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-// Components
-@import "components";
 
-// Utilites
-@import "utilities";
+// Base style
+@layer base {
+  html,
+  body,
+  body > div:first-child,
+  div#__next {
+    height: 100%
+  }
+}
