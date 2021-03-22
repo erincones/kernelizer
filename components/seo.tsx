@@ -16,11 +16,12 @@ interface SEOProps {
  * SEO component
  *
  * @param props SEO component properties
+ * @returns SEO component
  */
 export const SEO = ({ title, twitterCard = true, openGraph = true }: SEOProps): JSX.Element => {
   // Twiter card
   const tw = useMemo(() =>
-    twitterCard === undefined ? null : (
+    twitterCard && (
       <>
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Kernelizer" />
@@ -33,7 +34,7 @@ export const SEO = ({ title, twitterCard = true, openGraph = true }: SEOProps): 
 
   // Open graph
   const og = useMemo(() =>
-    openGraph === undefined ? null : (
+    openGraph && (
       <>
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Kernelizer" />
