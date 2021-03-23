@@ -4,9 +4,11 @@
   "description": "Another simple web image viewer and editor",
   "private": true,
   "scripts": {
-    "dev": "next",
+    "start": "next start",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "export": "next export",
+    "telemetry": "next telemetry"
   },
   "repository": {
     "type": "git",
@@ -19,26 +21,26 @@
   },
   "homepage": "https://kernelizer.vercel.app",
   "dependencies": {
-    "next": "^10.0.3",
+    "next": "^10.0.9",
     "postcss-flexbugs-fixes": "^5.0.2",
-    "postcss-import": "^13.0.0",
+    "postcss-import": "^14.0.0",
     "postcss-preset-env": "^6.7.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "sass": "^1.30.0",
-    "tailwindcss": "^2.0.1"
+    "sass": "^1.32.8",
+    "tailwindcss": "^2.0.4"
   },
   "devDependencies": {
-    "@types/node": "^14.14.10",
-    "@types/react": "^17.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.9.0",
-    "@typescript-eslint/parser": "^4.9.0",
-    "eslint": "^7.15.0",
-    "eslint-plugin-react": "^7.21.5",
+    "@types/node": "^14.14.35",
+    "@types/react": "^17.0.3",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-react": "^7.22.0",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "stylelint": "^13.8.0",
-    "stylelint-config-recommended": "^3.0.0",
-    "stylelint-scss": "^3.18.0",
-    "typescript": "^4.1.2"
+    "stylelint": "^13.12.0",
+    "stylelint-config-recommended": "^4.0.0",
+    "stylelint-scss": "^3.19.0",
+    "typescript": "^4.2.3"
   }
 }
