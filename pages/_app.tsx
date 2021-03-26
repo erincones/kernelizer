@@ -2,13 +2,16 @@ import { ReactNode } from "react";
 import { AppProps } from "next/app";
 import Head from "next/head";
 
+import colors from "tailwindcss/colors";
+
 import "../styles/index.scss";
 
 
 /**
  * Application component
  *
- * @param props application properties
+ * @param props Application component properties
+ * @returns Application component
  */
 const App = ({ Component, pageProps }: AppProps): ReactNode => {
   return (
@@ -22,7 +25,7 @@ const App = ({ Component, pageProps }: AppProps): ReactNode => {
         <meta name="description" content="Another simple web image viewer and editor" />
         <meta name="generator" content="Next.js" />
         <meta name="keywords" content="image, viewer, editor, kernel, filter, web, online" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content={colors.blueGray[`700`]} />
 
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />

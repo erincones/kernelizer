@@ -13,8 +13,9 @@ interface Error500Props {
  * Parse HTTP status codes
  *
  * @param status HTTP status code
+ * @returns Status message
  */
-const parseStatus = (status: number) => {
+const parseStatus = (status: number): string => {
   switch (status) {
     case 500: return `500: Internal server error`;
     case 501: return `501: Not implemented`;
@@ -39,6 +40,7 @@ const parseStatus = (status: number) => {
  * Error 500 page
  *
  * @param props Error 500 page properties
+ * @returns Error 500 page
  */
 const Error500 = ({ status }: Error500Props): JSX.Element => {
   return (

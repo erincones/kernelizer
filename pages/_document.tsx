@@ -7,6 +7,8 @@ import Document, { Html, Head, Main, NextScript } from "next/document";
 class CustomDocument extends Document {
   /**
    * Render component
+   *
+   * @returns Render component
    */
   render = (): JSX.Element => (
     <Html lang="en">

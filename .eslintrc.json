@@ -26,15 +26,14 @@
     "quotes": "off",
     "indent": [ "error", 2, { "SwitchCase": 1 } ],
     "@typescript-eslint/quotes": [ "error", "backtick" ],
-    "react/jsx-filename-extension": [ 1, { "extensions": [ ".js", ".jsx", ".tsx" ] } ],
-    "react/jsx-uses-react": "off",
+    "react/jsx-filename-extension": [ 1, { "extensions": [ ".jsx", ".tsx" ] } ],
     "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn"
   },
   "overrides": [
     {
-      "files": [ "*.ts", "*.tsx" ],
+      "files": [ "*.tsx" ],
       "extends": [
         "plugin:@typescript-eslint/recommended"
       ],

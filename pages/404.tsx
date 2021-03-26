@@ -3,6 +3,8 @@ import { SEO } from "../components/seo";
 
 /**
  * Error 404 page
+ *
+ * @returns Error 404 page
  */
 const Error404 = (): JSX.Element => {
   return (
