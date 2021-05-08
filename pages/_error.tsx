@@ -1,10 +1,12 @@
 import { SEO } from "../components/seo";
 
+import { cowsay } from "cowsayjs";
+
 
 /**
  * Error 500 page properties
  */
-interface Error500Props {
+interface Props {
   readonly status: number;
 }
 
@@ -31,7 +33,7 @@ const parseStatus = (status: number): string => {
     case 511: return `511: Network authentication required`;
     case 598: return `598: Network read timeout error`;
     case 599: return `599: Network connect timeout error`;
-    default: `${status}: Unknown error`;
+    default: return `${status}: Unknown error`;
   }
 };
 
@@ -42,13 +44,13 @@ const parseStatus = (status: number): string => {
  * @param props Error 500 page properties
  * @returns Error 500 page
  */
-const Error500 = ({ status }: Error500Props): JSX.Element => {
+const Error500 = ({ status }: Props): JSX.Element => {
   return (
     <>
       <SEO title="Kernelizer - Server error" />
 
-      <pre className="whitespace-pre overflow-x-auto ">
-        {parseStatus(status)}
+      <pre className="leading-tight">
+        {cowsay(parseStatus(status))}
       </pre>
     </>
   );
