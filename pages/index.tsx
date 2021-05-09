@@ -3,6 +3,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { SEO } from "../components/seo";
 
 import { Sidebar } from "../components/sidebar";
+import { Toolbar } from "../components/toolbar";
 import { DragZone } from "../components/drag-zone";
 
 
@@ -36,15 +37,15 @@ const Home = (): JSX.Element => {
   }, []);
 
   // Clear handler
-  const handleClear = useCallback(() => {
-    setSrc(src => {
-      if (src) {
-        URL.revokeObjectURL(src);
-      }
+  // const handleClear = useCallback(() => {
+  //   setSrc(src => {
+  //     if (src) {
+  //       URL.revokeObjectURL(src);
+  //     }
 
-      return undefined;
-    });
-  }, []);
+  //     return undefined;
+  //   });
+  // }, []);
 
 
   // Load and release image
@@ -85,24 +86,15 @@ const Home = (): JSX.Element => {
         </header>
 
         <div className="flex flex-col md:flex-row flex-grow overflow-hidden w-full h-full">
-          {/* Settings bar */}
           <Sidebar />
 
           {/* Image container */}
           <section className="flex flex-col flex-grow bg-trueGray-50 overflow-hidden">
-            {/* Image controls */}
-            <div className="bg-blueGray-300 px-2 py-1">
-              <div>
-                <button onClick={handleClear}>
-                  Clear
-                </button>
-              </div>
-            </div>
+            <Toolbar />
 
-            {/* Drag zone and canvas */}
             <div className="flex-grow overflow-auto">
               {src === undefined ?
-                <DragZone accept="image/*" onChange={handleFiles} /> :
+                <DragZone id="file" accept="image/*" onChange={handleFiles} /> :
                 <canvas ref={canvas} />
               }
             </div>

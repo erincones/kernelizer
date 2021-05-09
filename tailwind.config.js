@@ -5,7 +5,8 @@ module.exports = {
     mode: `all`,
     content: [
       `pages/**/*.{js,ts,jsx,tsx}`,
-      `components/**/*.{js,ts,jsx,tsx}`
+      `components/**/*.{js,ts,jsx,tsx}`,
+      `node_modules/@fortawesome/**/*.js`
     ],
     options: {
       keyframes: true
