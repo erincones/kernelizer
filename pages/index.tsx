@@ -93,10 +93,9 @@ const Home = (): JSX.Element => {
             <Toolbar />
 
             <div className="flex-grow overflow-auto">
-              {src === undefined ?
-                <DragZone id="file" accept="image/*" onChange={handleFiles} /> :
-                <canvas ref={canvas} />
-              }
+              <DragZone id="file" accept="image/*" onChange={handleFiles}>
+                {src && <canvas ref={canvas} />}
+              </DragZone>
             </div>
           </section>
         </div>

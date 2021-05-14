@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useCallback, SyntheticEvent, DragEvent, ChangeEvent, InputHTMLAttributes } from "react";
+import { useRef, useState, useCallback, ReactNode, SyntheticEvent, DragEvent, ChangeEvent, InputHTMLAttributes } from "react";
 
 
 /**
@@ -9,6 +9,7 @@ interface Props {
   readonly name?: InputHTMLAttributes<HTMLInputElement>["name"];
   readonly multiple?: InputHTMLAttributes<HTMLInputElement>["multiple"];
   readonly accept?: InputHTMLAttributes<HTMLInputElement>["accept"];
+  readonly children?: ReactNode;
   readonly onChange?: (files: FileList | null) => unknown;
 }
 
@@ -49,24 +50,20 @@ const stopPropagation = (e: SyntheticEvent): void => {
  * @param props Drag zone component properties
  * @returns Drag zone component
  */
-export const DragZone = ({ id, name = id, multiple, accept, onChange }: Props): JSX.Element => {
+export const DragZone = ({ id, name = id, multiple, accept, children, onChange }: Props): JSX.Element => {
   const input = useRef<HTMLInputElement>(null);
   const [ focused, setFocused ] = useState(false);
 
-  // Handlers
-  const [ handleDrop, handleInputChange ] = useMemo(() => {
-    return onChange ? [
-      // Drop handler
-      (e: DragEvent): void => {
-        e.preventDefault();
-        onChange(e.dataTransfer.files);
-      },
 
-      // Input change handler
-      (e: ChangeEvent<HTMLInputElement>): void => {
-        onChange(e.currentTarget.files);
-      }
-    ] : [];
+  // Drop handler
+  const handleDrop = useCallback((e: DragEvent): void => {
+    e.preventDefault();
+    onChange?.(e.dataTransfer.files);
+  }, [ onChange ]);
+
+  // Input change handler
+  const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
+    onChange?.(e.currentTarget.files);
   }, [ onChange ]);
 
   // Click handler
@@ -75,24 +72,45 @@ export const DragZone = ({ id, name = id, multiple, accept, onChange }: Props): 
   }, []);
 
   // Handle focus
-  const handleFocus = useCallback(() => { setFocused(true); }, []);
+  const handleFocus = useCallback(() => {
+    setFocused(true);
+  }, []);
 
   // Handle focus
-  const handleBlur = useCallback(() => { setFocused(false); }, []);
+  const handleBlur = useCallback(() => {
+    setFocused(false);
+  }, []);
 
 
   // Return the drag zone component
   return (
-    <button
-      onClick={handleClick}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
+    <div
       onDragStart={handleDragStart}
       onDragEnter={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className="flex justify-center items-center shadow-inner w-full h-full"
+      className="w-full h-full"
     >
+      {/* Children or browse button */}
+      {children || (
+        <button
+          onClick={handleClick}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          className="flex justify-center items-center shadow-inner w-full h-full"
+        >
+          <label
+            htmlFor={id}
+            onClick={stopPropagation}
+            className={`${focused ? `ring ` : ``}text-blueGray-500 text-center tracking-wider leading-relaxed cursor-pointer px-4 py-2`}>
+            <span className="text-3xl">Drag the image here</span>
+            <br />
+            or click to browse
+          </label>
+        </button>
+      )}
+
+      {/* Hidden file input */}
       <input
         ref={input}
         id={id}
@@ -100,19 +118,9 @@ export const DragZone = ({ id, name = id, multiple, accept, onChange }: Props): 
         type="file"
         multiple={multiple}
         accept={accept}
-        onClick={stopPropagation}
         onChange={handleInputChange}
         className="hidden"
       />
-
-      <label
-        htmlFor={id}
-        onClick={stopPropagation}
-        className={`${focused ? `ring ` : ``}text-blueGray-500 text-center tracking-wider leading-relaxed cursor-pointer px-4 py-2`}>
-        <span className="text-3xl">Drag the image here</span>
-        <br />
-        or click to browse
-      </label>
-    </button>
+    </div>
   );
 };
