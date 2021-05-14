@@ -1,10 +1,11 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback } from "react";
 
 import { SEO } from "../components/seo";
 
 import { Sidebar } from "../components/sidebar";
 import { Toolbar } from "../components/toolbar";
 import { DragZone } from "../components/drag-zone";
+import { Canvas, CanvasElement } from "../components/canvas";
 
 
 /**
@@ -13,9 +14,9 @@ import { DragZone } from "../components/drag-zone";
  * @returns Home component
  */
 const Home = (): JSX.Element => {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const [ src, setSrc ] = useState<string>();
-  const [ , setImgs ] = useState<HTMLImageElement>();
+  const canvas = useRef<CanvasElement>(null);
+  const [ image, setImg ] = useState<HTMLImageElement>();
+
 
   // Files handler
   const handleFiles = useCallback((files: FileList | null): void => {
@@ -25,51 +26,18 @@ const Home = (): JSX.Element => {
 
       // Update source for valid image type
       if (file.type.startsWith(`image`)) {
-        setSrc(src => {
-          if (src) {
-            URL.revokeObjectURL(src);
+        setImg(image => {
+          if (image) {
+            URL.revokeObjectURL(image.src);
           }
 
-          return URL.createObjectURL(file);
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
+          return img;
         });
       }
     }
   }, []);
-
-  // Clear handler
-  // const handleClear = useCallback(() => {
-  //   setSrc(src => {
-  //     if (src) {
-  //       URL.revokeObjectURL(src);
-  //     }
-
-  //     return undefined;
-  //   });
-  // }, []);
-
-
-  // Load and release image
-  useEffect(() => {
-    if (src === undefined) {
-      setImgs(undefined);
-    }
-    else {
-      const img = new Image();
-      img.src = src;
-
-      img.addEventListener(`load`, function() {
-        if (canvas.current) {
-          canvas.current.width = this.width;
-          canvas.current.height = this.height;
-
-          const ctx = canvas.current.getContext(`2d`);
-          ctx?.drawImage(this, 0, 0);
-        }
-      });
-
-      setImgs(img);
-    }
-  }, [ src ]);
 
 
   // Return the home component
@@ -94,7 +62,7 @@ const Home = (): JSX.Element => {
 
             <div className="flex-grow overflow-auto">
               <DragZone id="file" accept="image/*" onChange={handleFiles}>
-                {src && <canvas ref={canvas} />}
+                {image && <Canvas ref={canvas} img={image} />}
               </DragZone>
             </div>
           </section>
