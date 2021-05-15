@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useImperativeHandle, useEffect, CSSProperties } from "react";
+import { useRef, useEffect, CSSProperties } from "react";
 
 import { Picture } from "../lib/picture";
 
@@ -12,28 +12,15 @@ interface Props {
   readonly background?: CSSProperties["background"];
 }
 
-/**
- * Canvas element
- */
-export interface CanvasElement {
-  readonly element: HTMLCanvasElement | null;
-}
-
 
 /**
  * Canvas component
  *
  * @param props Canvas component properties
  */
-export const Canvas = forwardRef<CanvasElement, Props>(({ pic, scale = `fit`, background }: Props, ref): JSX.Element => {
+export const Canvas = ({ pic, scale = `fit`, background }: Props): JSX.Element => {
   const container = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-
-
-  // Setup canvas ref
-  useImperativeHandle(ref, () => ({
-    element: canvas.current
-  }), []);
 
 
   // Scale image
@@ -91,6 +78,4 @@ export const Canvas = forwardRef<CanvasElement, Props>(({ pic, scale = `fit`, ba
       <canvas ref={canvas} className="absolute" />
     </div>
   );
-});
-
-Canvas.displayName = `Canvas`;
+};

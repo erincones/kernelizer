@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useReducer, useEffect } from "react";
+import { useState, useCallback, useReducer, useEffect } from "react";
 
 import { SEO } from "../components/seo";
 
@@ -9,7 +9,7 @@ import { Sidebar } from "../components/sidebar";
 import { Toolbar } from "../components/toolbar";
 import { Error } from "../components/error";
 import { DragZone } from "../components/drag-zone";
-import { Canvas, CanvasElement } from "../components/canvas";
+import { Canvas } from "../components/canvas";
 import { Spinner } from "../components/spinner";
 
 
@@ -19,7 +19,6 @@ import { Spinner } from "../components/spinner";
  * @returns Home component
  */
 const Home = (): JSX.Element => {
-  const canvas = useRef<CanvasElement>(null);
   const [ src, setSrc ] = useState(``);
   const [ supported, setSupported ] = useState<boolean>();
   const [ loading, setLoading ] = useState(false);
@@ -152,7 +151,7 @@ const Home = (): JSX.Element => {
 
               <div className="flex-grow overflow-hidden">
                 <DragZone id="file" accept="image/*" loading={loading} onChange={handleFiles}>
-                  {picture && <Canvas ref={canvas} pic={picture} />}
+                  {picture && <Canvas pic={picture} />}
                 </DragZone>
               </div>
             </section>
