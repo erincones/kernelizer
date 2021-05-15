@@ -150,7 +150,7 @@ const Home = (): JSX.Element => {
                 {error}
               </Error>
 
-              <div className="flex-grow overflow-auto">
+              <div className="flex-grow overflow-hidden">
                 <DragZone id="file" accept="image/*" loading={loading} onChange={handleFiles}>
                   {picture && <Canvas ref={canvas} pic={picture} />}
                 </DragZone>

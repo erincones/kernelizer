@@ -89,4 +89,44 @@ export class Picture {
   private constructor(data: Uint8ClampedArray, width: number, height: number) {
     this.image = new ImageData(data, width, height);
   }
+
+
+  // Public methods
+
+  public scale(x: number, y: number): Picture {
+    // Source size and data
+    const srcW = this.image.width;
+    const srcH = this.image.height;
+    const src = this.image.data;
+
+    // No scale
+    if ((x === 1) && (y === 1)) {
+      return new Picture(src, srcW, srcH);
+    }
+
+
+    // Destiny size and data
+    const dstW = Math.trunc(x * srcW);
+    const dstH = Math.trunc(y * srcH);
+    const dst = new Uint8ClampedArray(dstW * dstH * 4);
+
+    // Scale
+    const dx = 1 / x;
+    const dy = 1 / y;
+    const dd = dstW << 2;
+
+    for (let sj = 0, dj = 0; sj < srcH; sj += dy, dj += dd) {
+      for (let si = 0, b = dj; si < srcW; si += dx, b += 4) {
+        const a = (Math.trunc(sj) * srcW + Math.trunc(si)) << 2;
+
+        dst[b]     = src[a];
+        dst[b + 1] = src[a + 1];
+        dst[b + 2] = src[a + 2];
+        dst[b + 3] = src[a + 3];
+      }
+    }
+
+    // Return new picture
+    return new Picture(dst, dstW, dstH);
+  }
 }

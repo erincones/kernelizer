@@ -36,56 +36,58 @@ export const Canvas = forwardRef<CanvasElement, Props>(({ pic, scale = `fit`, ba
   }), []);
 
 
-  // Update image
-  useEffect(() => {
-    const cnv = canvas.current as HTMLCanvasElement;
-    const ctx = cnv.getContext(`2d`) as CanvasRenderingContext2D;
-
-    if (pic) {
-      const img = pic.image;
-      cnv.width = img.width;
-      cnv.height = img.height;
-      ctx.putImageData(img, 0, 0);
-    }
-    else {
-      cnv.width = 0;
-      cnv.height = 0;
-      ctx.clearRect(0, 0, cnv.width, cnv.height);
-    }
-  }, [ pic ]);
-
   // Scale image
   useEffect(() => {
-    if (!pic) return;
+    // Canvas
+    const cnv = canvas.current as HTMLCanvasElement;
+
+    // Validate picture
+    if (!pic) {
+      cnv.width = 0;
+      cnv.height = 0;
+      cnv.style.left = ``;
+      cnv.style.top = ``;
+      return;
+    }
+
 
     // Elements
     const div = container.current as HTMLDivElement;
-    const cnv = canvas.current as HTMLCanvasElement;
     const ctx = cnv.getContext(`2d`) as CanvasRenderingContext2D;
+    const img = pic.image;
+
 
     // Scale
-    const divRect = div.getBoundingClientRect();
-    const zoom = Math.min(1, divRect.width / cnv.width, divRect.height / cnv.height);
+    const zoom =
+      scale === `fit` ? Math.min(1, div.offsetWidth / img.width, div.offsetHeight / img.height) :
+      scale === `original` ? 1 :
+      scale;
 
-    cnv.width = Math.trunc(cnv.width * zoom);
-    cnv.height = Math.trunc(cnv.height * zoom);
+    const width = Math.trunc(img.width * zoom);
+    const height = Math.trunc(img.height * zoom);
 
     // Center
-    cnv.style.left = `${Math.trunc((divRect.width - cnv.width) / 2)}px`;
-    cnv.style.top = `${Math.trunc((divRect.height - cnv.height) / 2)}px`;
+    const left = Math.trunc(div.offsetWidth - width) >> 1;
+    const top = Math.trunc(div.offsetHeight - height) >> 1;
+
+    cnv.style.left = `${Math.max(left, 0)}px`;
+    cnv.style.top = `${Math.max(top, 0)}px`;
 
 
     // Repaint context
-    ctx.putImageData(pic.image, 0, 0);
+    cnv.width = width;
+    cnv.height = height;
+    ctx.putImageData(pic.scale(zoom, zoom).image, 0, 0);
+
+    // Scroll if necessary
+    if (left < 0) div.scrollLeft = -left;
+    if (top < 0) div.scrollTop = -top;
   }, [ scale, pic ]);
 
 
-  // Overflow
-  const overflow = (scale === `fit`) || (scale < 0) ? `overflow-hidden ` : ``;
-
   // Return canvas
   return (
-    <div ref={container} className={`${overflow}relative w-full h-full`} style={{ background }}>
+    <div ref={container} className="relative overflow-auto w-full h-full" style={{ background }}>
       <canvas ref={canvas} className="absolute" />
     </div>
   );
