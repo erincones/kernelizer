@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback, ReactNode, SyntheticEvent, DragEvent, ChangeEvent, InputHTMLAttributes } from "react";
 
+import { Spinner } from "./spinner";
+
 
 /**
  * Drag zone component properties
@@ -9,6 +11,7 @@ interface Props {
   readonly name?: InputHTMLAttributes<HTMLInputElement>["name"];
   readonly multiple?: InputHTMLAttributes<HTMLInputElement>["multiple"];
   readonly accept?: InputHTMLAttributes<HTMLInputElement>["accept"];
+  readonly loading?: boolean;
   readonly children?: ReactNode;
   readonly onChange?: (files: FileList | null) => unknown;
 }
@@ -50,7 +53,7 @@ const stopPropagation = (e: SyntheticEvent): void => {
  * @param props Drag zone component properties
  * @returns Drag zone component
  */
-export const DragZone = ({ id, name = id, multiple, accept, children, onChange }: Props): JSX.Element => {
+export const DragZone = ({ id, name = id, multiple, accept, loading, children, onChange }: Props): JSX.Element => {
   const input = useRef<HTMLInputElement>(null);
   const [ focused, setFocused ] = useState(false);
 
@@ -85,14 +88,15 @@ export const DragZone = ({ id, name = id, multiple, accept, children, onChange }
   // Return the drag zone component
   return (
     <div
-      onDragStart={handleDragStart}
-      onDragEnter={handleDrag}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
+      onDragStart={loading ? undefined : handleDragStart}
+      onDragEnter={loading ? undefined : handleDrag}
+      onDragOver={loading ? undefined : handleDrag }
+      onDrop={loading ? undefined : handleDrop }
       className="w-full h-full"
     >
-      {/* Children or browse button */}
-      {children || (
+      {loading ? ( // Loading
+        <Spinner />
+      ) : children || ( // Children or upload button
         <button
           onClick={handleClick}
           onFocus={handleFocus}
@@ -111,7 +115,7 @@ export const DragZone = ({ id, name = id, multiple, accept, children, onChange }
       )}
 
       {/* Hidden file input */}
-      <input
+      {!loading && <input
         ref={input}
         id={id}
         name={name}
@@ -120,7 +124,7 @@ export const DragZone = ({ id, name = id, multiple, accept, children, onChange }
         accept={accept}
         onChange={handleInputChange}
         className="hidden"
-      />
+      />}
     </div>
   );
 };

@@ -10,16 +10,18 @@ class CustomDocument extends Document {
    *
    * @returns Render component
    */
-  render = (): JSX.Element => (
-    <Html lang="en">
-      <Head />
+  public render(): JSX.Element {
+    return (
+      <Html lang="en">
+        <Head />
 
-      <body>
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
-  );
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
 }
 
 export default CustomDocument;
