@@ -29,6 +29,12 @@ interface TemporaryAction {
   readonly pic?: Picture;
 }
 
+/** CloseAction */
+interface CloseAction {
+  readonly type: `CLOSE`;
+  readonly error?: string;
+}
+
 /** Error action */
 interface ErrorAction {
   readonly type: `ERROR`;
@@ -44,12 +50,12 @@ interface ScaleAction {
 
 /** Simple action */
 interface SimpleAction {
-  readonly type: `FORWARD` | `BACKWARD` | `CLOSE` | `FIT`;
+  readonly type: `FORWARD` | `BACKWARD` | `FIT`;
 }
 
 
 /** Action */
-type Action = PictureAction | TemporaryAction | ErrorAction | ScaleAction | SimpleAction;
+type Action = PictureAction | TemporaryAction | CloseAction | ErrorAction | ScaleAction | SimpleAction;
 
 
 /**
@@ -134,7 +140,7 @@ export const kernelizer = (state: State, action: Action): State => {
     case `ENQUEUE`:       return enqueue(state, action.pic);
     case `SET_TEMPORARY`: return state.temporary === action.pic ? state : { ...state, temporary: action.pic };
 
-    case `CLOSE`: return initialKernelizer;
+    case `CLOSE`: return { ...initialKernelizer, error: action.error };
     case `ERROR`: return action.error === state.error ? state : { ...state, error: action.error };
 
     case `FORWARD`:  return state.current === state.history.length - 1 ? state : { ...state, current: state.current + 1 };

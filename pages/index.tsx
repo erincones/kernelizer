@@ -1,4 +1,4 @@
-import { useState, useCallback, useReducer, useEffect } from "react";
+import { useState, useReducer, useCallback } from "react";
 
 import { SEO } from "../components/seo";
 
@@ -11,6 +11,7 @@ import { Toolbar } from "../components/toolbar";
 import { Error } from "../components/error";
 import { DragZone } from "../components/drag-zone";
 import { Canvas } from "../components/canvas";
+import { useImageLoader } from "../hooks/image-loader";
 
 
 /**
@@ -19,28 +20,36 @@ import { Canvas } from "../components/canvas";
  * @returns Home component
  */
 const Home = (): JSX.Element => {
-  const [ src, setSrc ] = useState(``);
   const [ loading, setLoading ] = useState(false);
   const [ { history, current, scale, fit, error }, dispatch ] = useReducer(kernelizer, initialKernelizer);
+
+
+  // Image loader
+  const loadImage = useImageLoader({
+    ontypeerror: file => {
+      dispatch({ type: `ERROR`, error: `Not valid format: ${file.type}` });
+    },
+    onload: function() {
+      dispatch({ type: `LOAD`, pic: Picture.fromImage(this) });
+      setLoading(false);
+    },
+    onerror: (err: ErrorEvent) => {
+      dispatch({ type: `CLOSE`, error: typeof err === `string` ? err : `Unknown error` });
+      setLoading(false);
+    },
+    onabort: () => {
+      dispatch({ type: `CLOSE`, error: `Loading aborted` });
+      setLoading(false);
+    }
+  });
 
 
   // Files handler
   const handleFiles = useCallback((files: FileList | null): void => {
     if (files && files.length) {
-      const file = files[0];
-
-      if (file.type.startsWith(`image`)) {
-        setLoading(true);
-        setSrc(src => {
-          URL.revokeObjectURL(src);
-          return URL.createObjectURL(file);
-        });
-      }
-      else {
-        dispatch({ type: `ERROR`, error: `Not valid format: ${file.type}` });
-      }
+      loadImage(files[0]);
     }
-  }, []);
+  }, [ loadImage ]);
 
   // Close error handler
   const closeError = useCallback(() => {
@@ -51,41 +60,6 @@ const Home = (): JSX.Element => {
   const handleScaleChange = useCallback((scale: number, min?: number) => {
     dispatch({ type: `SET_SCALE`, scale, min });
   }, []);
-
-
-  // Load new image
-  useEffect(() => {
-    if (!src) return;
-
-    // Image parser
-    const img = new Image();
-
-    // Loaded image
-    img.onload = () => {
-      dispatch({ type: `LOAD`, pic: Picture.fromImage(img) });
-      setLoading(false);
-    };
-
-    // Handle error
-    img.onerror = err => {
-      dispatch({ type: `CLOSE` });
-      dispatch({
-        type: `ERROR`,
-        error: typeof err === `string` ? err : `Unknown error`
-      });
-      setLoading(false);
-    };
-
-    // Notify reset
-    img.onabort = () => {
-      dispatch({ type: `CLOSE` });
-      dispatch({ type: `ERROR`, error: `Loading aborted` });
-      setLoading(false);
-    };
-
-    // Load image
-    img.src = src;
-  }, [ src ]);
 
 
   // Current image
