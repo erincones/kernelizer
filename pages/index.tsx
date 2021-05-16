@@ -110,7 +110,7 @@ const Home = (): JSX.Element => {
 
             <div className="flex-grow overflow-hidden">
               <DragZone id="file" accept="image/*" loading={loading} onChange={handleFiles}>
-                {picture && <Canvas pic={picture} />}
+                {picture && <Canvas fit pic={picture} />}
               </DragZone>
             </div>
           </section>

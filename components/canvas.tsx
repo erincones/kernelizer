@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, CSSProperties } from "react";
+import { useRef, useState, useCallback, useEffect, CSSProperties, WheelEvent } from "react";
 
 import { Picture } from "../lib/picture";
 
@@ -8,12 +8,16 @@ import { Picture } from "../lib/picture";
  */
 interface Props {
   readonly pic?: Picture;
-  readonly scale?: `fit` | `original` | number;
+  readonly fit?: boolean;
+  readonly scale?: number;
   readonly background?: CSSProperties["background"];
 }
 
 /** Maximum zoom */
 const MAX_ZOOM = 20;
+
+/** Zoom step */
+const ZOOM_STEP = 1.25;
 
 
 /**
@@ -21,7 +25,7 @@ const MAX_ZOOM = 20;
  *
  * @param props Canvas component properties
  */
-export const Canvas = ({ pic, scale = `fit`, background }: Props): JSX.Element => {
+export const Canvas = ({ pic, fit, scale = 1, background }: Props): JSX.Element => {
   const container = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [ viewer, setViewer ] = useState({ width: 0, height: 0 });
@@ -43,11 +47,11 @@ export const Canvas = ({ pic, scale = `fit`, background }: Props): JSX.Element =
     // Center
     const width = cnt.offsetWidth;
     const height = cnt.offsetHeight;
-    const left = Math.max(Math.trunc(width - w) >> 1, 0);
-    const top = Math.max(Math.trunc(height - h) >> 1, 0);
+    const left = (width - w) >> 1;
+    const top = (height - h) >> 1;
 
-    cnv.style.left = `${Math.max(left, 0)}px`;
-    cnv.style.top = `${Math.max(top, 0)}px`;
+    cnv.style.left = `${left}px`;
+    cnv.style.top = `${top}px`;
 
 
     // Repaint context
@@ -60,6 +64,17 @@ export const Canvas = ({ pic, scale = `fit`, background }: Props): JSX.Element =
     }
   }, [ minZoom ]);
 
+
+  const handleWheel = useCallback((e: WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    if (!pic) return;
+
+    const current = (canvas.current as HTMLCanvasElement).width / pic.image.width;
+    const scale = Math.max(minZoom, Math.min(MAX_ZOOM, e.deltaY < 0 ? current * ZOOM_STEP : current / ZOOM_STEP));
+
+    if (current !== scale) zoom(pic, scale);
+  }, [ zoom, pic, minZoom ]);
 
 
   // Handle container resize
@@ -97,13 +112,13 @@ export const Canvas = ({ pic, scale = `fit`, background }: Props): JSX.Element =
     setMinZoom(min);
 
     // update zoom
-    zoom(pic, scale === `fit` ? min : scale === `original` ? 1 : scale);
-  }, [ zoom, viewer.width, viewer.height, scale, pic ]);
+    zoom(pic, fit ? min : scale);
+  }, [ zoom, viewer.width, viewer.height, fit, scale, pic ]);
 
 
   // Return canvas
   return (
-    <div ref={container} className="relative overflow-hidden w-full h-full" style={{ background }}>
+    <div ref={container} onWheel={handleWheel} className="relative overflow-hidden w-full h-full" style={{ background }}>
       <canvas ref={canvas} className="absolute" />
     </div>
   );
