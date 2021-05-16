@@ -49,54 +49,44 @@ export const Canvas = ({ pic, scaleFactor = 1.25, scale = 1, fit = true, backgro
     return () => window.removeEventListener(`resize`, handleResize, true);
   }, [ onScaleChange, pic, scale, fit ]);
 
-  // Scale image
+
+  // Update picture
   useEffect(() => {
-    // Canvas
+    // Validate picture
     const cnv = canvas.current as HTMLCanvasElement;
 
-    // Validate picture
     if (!pic) {
       cnv.width = 0;
       cnv.height = 0;
-      cnv.style.left = ``;
-      cnv.style.top = ``;
+      cnv.style.transform = ``;
       return;
     }
 
+    // Update picture
+    const ctx = cnv.getContext(`2d`) as CanvasRenderingContext2D;
+    cnv.width = pic.image.width;
+    cnv.height = pic.image.height;
+    ctx.putImageData(pic.image, 0, 0);
+  }, [ pic ]);
 
-    // Elements
+  // Scale picture
+  useEffect(() => {
     const cnt = container.current as HTMLDivElement;
-    const img = pic.image;
+    const cnv = canvas.current as HTMLCanvasElement;
 
-    // Scale
-    const w = Math.trunc(img.width * scale);
-    const h = Math.trunc(img.height * scale);
+    const dx = (cnt.offsetWidth - Math.trunc(cnv.width * scale)) >> 1;
+    const dy = (cnt.offsetHeight - Math.trunc(cnv.height * scale)) >> 1;
 
-    // Center
-    const width = cnt.offsetWidth;
-    const height = cnt.offsetHeight;
-    const left = (width - w) >> 1;
-    const top = (height - h) >> 1;
-
-    cnv.style.left = `${left}px`;
-    cnv.style.top = `${top}px`;
-
-
-    // Repaint context
-    if ((cnv.width !== w) || (cnv.height !== h)) {
-      const ctx = cnv.getContext(`2d`) as CanvasRenderingContext2D;
-
-      cnv.width = w;
-      cnv.height = h;
-      ctx.putImageData(pic.scale(scale, scale).image, 0, 0);
-    }
-  }, [ pic, scale ]);
+    cnv.style.transformOrigin = `0 0`;
+    cnv.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    cnv.style.imageRendering = scale > 1 ? `crisp-edges` : ``;
+  }, [ scale ]);
 
 
   // Return canvas
   return (
-    <div ref={container} onWheel={handleWheel} className="relative overflow-hidden w-full h-full" style={{ background }}>
-      <canvas ref={canvas} className="absolute" />
+    <div ref={container} onWheel={handleWheel} className="overflow-hidden w-full h-full" style={{ background }}>
+      <canvas ref={canvas} />
     </div>
   );
 };
