@@ -3,6 +3,7 @@ import { useState, useCallback, useReducer, useEffect } from "react";
 import { SEO } from "../components/seo";
 
 import { initialKernelizer, kernelizer } from "../reducers/kernelizer";
+import { Picture } from "../lib/picture";
 
 import { SecureContext } from "../components/secure-context";
 import { Sidebar } from "../components/sidebar";
@@ -20,7 +21,7 @@ import { Canvas } from "../components/canvas";
 const Home = (): JSX.Element => {
   const [ src, setSrc ] = useState(``);
   const [ loading, setLoading ] = useState(false);
-  const [ { history, current, error }, dispatch ] = useReducer(kernelizer, initialKernelizer);
+  const [ { history, current, scale, fit, error }, dispatch ] = useReducer(kernelizer, initialKernelizer);
 
 
   // Files handler
@@ -36,7 +37,7 @@ const Home = (): JSX.Element => {
         });
       }
       else {
-        dispatch({ type: `ERROR`, payload: `Not valid format: ${file.type}` });
+        dispatch({ type: `ERROR`, error: `Not valid format: ${file.type}` });
       }
     }
   }, []);
@@ -44,6 +45,11 @@ const Home = (): JSX.Element => {
   // Close error handler
   const closeError = useCallback(() => {
     dispatch({ type: `ERROR` });
+  }, []);
+
+  // Scale change handler
+  const handleScaleChange = useCallback((scale: number, min?: number) => {
+    dispatch({ type: `SET_SCALE`, scale, min });
   }, []);
 
 
@@ -56,7 +62,7 @@ const Home = (): JSX.Element => {
 
     // Loaded image
     img.onload = () => {
-      dispatch({ type: `LOAD`, payload: img });
+      dispatch({ type: `LOAD`, pic: Picture.fromImage(img) });
       setLoading(false);
     };
 
@@ -65,7 +71,7 @@ const Home = (): JSX.Element => {
       dispatch({ type: `CLOSE` });
       dispatch({
         type: `ERROR`,
-        payload: typeof err === `string` ? err : `Unknown error`
+        error: typeof err === `string` ? err : `Unknown error`
       });
       setLoading(false);
     };
@@ -73,7 +79,7 @@ const Home = (): JSX.Element => {
     // Notify reset
     img.onabort = () => {
       dispatch({ type: `CLOSE` });
-      dispatch({ type: `ERROR`, payload: `Loading aborted` });
+      dispatch({ type: `ERROR`, error: `Loading aborted` });
       setLoading(false);
     };
 
@@ -110,7 +116,14 @@ const Home = (): JSX.Element => {
 
             <div className="flex-grow overflow-hidden">
               <DragZone id="file" accept="image/*" loading={loading} onChange={handleFiles}>
-                {picture && <Canvas fit pic={picture} />}
+                {picture && (
+                  <Canvas
+                    pic={picture}
+                    scale={scale}
+                    fit={fit}
+                    onScaleChange={handleScaleChange}
+                  />
+                )}
               </DragZone>
             </div>
           </section>
