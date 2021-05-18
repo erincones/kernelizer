@@ -28,7 +28,7 @@ export const Error = ({ children, onClose }: Props): JSX.Element | null => {
         <FontAwesomeIcon icon="exclamation-triangle" fixedWidth className="mr-1" />
         {children}
       </div>
-      <button type="button" onClick={onClose} className="hover:text-red-900 focus:ring">
+      <button type="button" onClick={onClose} className="hover:text-red-900 focus:outline-none focus:ring">
         <FontAwesomeIcon icon="times" fixedWidth />
       </button>
     </div>

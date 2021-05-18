@@ -2,31 +2,38 @@ import { Picture } from "../lib/picture";
 
 
 /**
- * Kernelizer status
+ * Initial kernelizer status
  */
-interface State {
-  readonly temporary?: Picture;
-  readonly history: ReadonlyArray<Picture>;
-  readonly current: number;
-  readonly scaleFactor: 1.25;
-  readonly scaleMin: number;
-  readonly scaleMax: 20;
-  readonly scale: number;
-  readonly fit?: boolean;
+interface InitialState {
+  readonly name?: undefined;
+  readonly picture?: undefined;
+  readonly history: [];
+  readonly current: 0;
   readonly error?: string;
 }
+
+/**
+ * Common kernelizer status
+ */
+interface CommonState {
+  readonly name: string;
+  readonly picture: Picture;
+  readonly history: ReadonlyArray<Picture>;
+  readonly current: number;
+  readonly error?: string;
+}
+
+/**
+ * Kernelizer status
+ */
+type State = InitialState | CommonState;
 
 
 /** Picture action */
 interface PictureAction {
-  readonly type: `LOAD` | `ENQUEUE`;
+  readonly type: `OPEN` | `UPDATE`;
   readonly pic: Picture;
-}
-
-/** Temporary action */
-interface TemporaryAction {
-  readonly type: `SET_TEMPORARY`;
-  readonly pic?: Picture;
+  readonly name?: string;
 }
 
 /** CloseAction */
@@ -41,89 +48,45 @@ interface ErrorAction {
   readonly error?: string;
 }
 
-/** Scale action */
-interface ScaleAction {
-  readonly type: `SET_SCALE`;
-  readonly scale: number;
-  readonly min?: number;
-}
-
 /** Simple action */
 interface SimpleAction {
-  readonly type: `FORWARD` | `BACKWARD` | `FIT`;
+  readonly type: `FORWARD` | `BACKWARD`;
 }
 
 
 /** Action */
-type Action = PictureAction | TemporaryAction | CloseAction | ErrorAction | ScaleAction | SimpleAction;
+type Action = PictureAction | CloseAction | ErrorAction | SimpleAction;
 
+
+/** Default name */
+const DEFAULT_NAME = `img.png`;
 
 /**
  * Initial kernelizer status
  */
-export const initialKernelizer: State = {
+export const initialKernelizer: InitialState = {
   history: [],
-  current: 0,
-  scaleFactor: 1.25,
-  scaleMin: 1,
-  scaleMax: 20,
-  scale: 1,
-  fit: true
+  current: 0
 };
 
 
 /**
- * Load the given picture
- *
- * @param state Current state
- * @param pic Picture to load
- * @returns New status
- */
-const load = (pic: Picture): State => {
-  return {
-    ...initialKernelizer,
-    history: [ pic ],
-    fit: true
-  };
-};
-
-/**
- * Enqueue the given picture after the current.
+ * Insert a new picture in the history.
  *
  * @param state Current state
  * @param pic Picture to push
- * @param fit Fit flag
- * @returns New status
+ * @param name Picture image
+ * @returns New state
  */
-const enqueue = (state: State, pic: Picture): State => {
+const save = (state: State, pic: Picture, name = DEFAULT_NAME): CommonState => {
   const next = state.current + 1;
 
   return {
-    ...state,
+    name: state.name || name,
+    picture: pic,
     history: state.history.slice(0, next).concat(pic),
     current: next
   };
-};
-
-/**
- * Set the new given scale values
- *
- * @param state Current state
- * @param factor New scale value
- * @param fit Fit flag
- * @returns New status
- */
-const scale = (state: State, factor: number, min?: number): State => {
-  const scaleMin = min !== undefined ? min : state.scaleMin;
-  const scale = Math.max(scaleMin, Math.min(state.scaleMax, factor));
-
-  return (state.scale === scale) && (state.scaleMin === scaleMin) ? state :
-    {
-      ...state,
-      scaleMin,
-      scale,
-      fit: state.fit && (scale === scaleMin)
-    };
 };
 
 
@@ -136,17 +99,13 @@ const scale = (state: State, factor: number, min?: number): State => {
  */
 export const kernelizer = (state: State, action: Action): State => {
   switch (action.type) {
-    case `LOAD`:          return load(action.pic);
-    case `ENQUEUE`:       return enqueue(state, action.pic);
-    case `SET_TEMPORARY`: return state.temporary === action.pic ? state : { ...state, temporary: action.pic };
+    case `OPEN`:   return { name: action.name || DEFAULT_NAME, picture: action.pic, history: [ action.pic ], current: 0 };
+    case `UPDATE`: return save(state, action.pic, action.name);
 
     case `CLOSE`: return { ...initialKernelizer, error: action.error };
     case `ERROR`: return action.error === state.error ? state : { ...state, error: action.error };
 
-    case `FORWARD`:  return state.current === state.history.length - 1 ? state : { ...state, current: state.current + 1 };
-    case `BACKWARD`: return state.current === 0 ? state : { ...state, current: state.current - 1 };
-
-    case `FIT`:      return state.fit ? state : { ...state, fit: true };
-    case `SET_SCALE`: return scale(state, action.scale, action.min);
+    case `FORWARD`:  return !state.picture || (state.current === state.history.length - 1) ? state : { ...state, current: state.current + 1 };
+    case `BACKWARD`: return !state.picture || !state.current ? state : { ...state, current: state.current - 1 };
   }
 };

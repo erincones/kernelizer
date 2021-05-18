@@ -21,7 +21,7 @@ export const SecureContext = ({ children }: Props): JSX.Element => {
 
   // Validate support
   useEffect(() => {
-    setSupported(document.createElement(`canvas`).getContext(`2d`) !== null);
+    setSupported(document.createElement(`canvas`).getContext(`webgl2`) !== null);
   }, []);
 
 
@@ -41,13 +41,13 @@ export const SecureContext = ({ children }: Props): JSX.Element => {
           />
         </span>
         <p className="text-blueGray-800">
-          This browser does not support <a
+          Your system does not support <a
             title="Support details"
             href="https://caniuse.com/mdn-api_canvasrenderingcontext2d"
             target="noopener noreferrer"
             className="font-mono font-middle underline focus:outline-none focus:ring"
           >
-            CanvasRenderingContext2D
+            WebGL2RenderingContext
           </a>.
         </p>
       </div>

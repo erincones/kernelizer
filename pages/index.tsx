@@ -1,9 +1,7 @@
-import { useState, useReducer, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 import { SEO } from "../components/seo";
 
-import { initialKernelizer, kernelizer } from "../reducers/kernelizer";
-import { Picture } from "../lib/picture";
 
 import { SecureContext } from "../components/secure-context";
 import { Sidebar } from "../components/sidebar";
@@ -21,25 +19,25 @@ import { useImageLoader } from "../hooks/image-loader";
  */
 const Home = (): JSX.Element => {
   const [ loading, setLoading ] = useState(false);
-  const [ { history, current, scale, fit, error }, dispatch ] = useReducer(kernelizer, initialKernelizer);
-
+  const [ error, setError ] = useState<string>();
+  const [ img, setImg ] = useState<HTMLImageElement>();
 
   // Image loader
   const loadImage = useImageLoader({
     ontypeerror: file => {
-      dispatch({ type: `ERROR`, error: `Not valid format: ${file.type}` });
+      setError(`Not valid format: ${file.type}`);
     },
     onload: function() {
-      dispatch({ type: `LOAD`, pic: Picture.fromImage(this) });
+      setImg(this);
       setLoading(false);
     },
     onerror: (err: ErrorEvent) => {
-      dispatch({ type: `CLOSE`, error: typeof err === `string` ? err : `Unknown error` });
       setLoading(false);
+      setError(typeof err === `string` ? err : `Unknown error`);
     },
     onabort: () => {
-      dispatch({ type: `CLOSE`, error: `Loading aborted` });
       setLoading(false);
+      setError(`Loading aborted`);
     }
   });
 
@@ -53,17 +51,9 @@ const Home = (): JSX.Element => {
 
   // Close error handler
   const closeError = useCallback(() => {
-    dispatch({ type: `ERROR` });
+    setError(undefined);
   }, []);
 
-  // Scale change handler
-  const handleScaleChange = useCallback((scale: number, min?: number) => {
-    dispatch({ type: `SET_SCALE`, scale, min });
-  }, []);
-
-
-  // Current image
-  const picture = history[current];
 
   // Return the home component
   return (
@@ -90,12 +80,9 @@ const Home = (): JSX.Element => {
 
             <div className="flex-grow overflow-hidden">
               <DragZone id="file" accept="image/*" loading={loading} onChange={handleFiles}>
-                {picture && (
+                {img && (
                   <Canvas
-                    pic={picture}
-                    scale={scale}
-                    fit={fit}
-                    onScaleChange={handleScaleChange}
+                    img={img}
                   />
                 )}
               </DragZone>

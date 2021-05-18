@@ -20,7 +20,7 @@ interface Props {
  */
 export const Button = ({ icon, onClick }: Props): JSX.Element => {
   return (
-    <button onClick={onClick} className="focus:outline-none focus:ring">
+    <button onClick={onClick} className="hover:text-blueGray-700 focus:outline-none focus:ring">
       <FontAwesomeIcon icon={icon} fixedWidth />
     </button>
   );
