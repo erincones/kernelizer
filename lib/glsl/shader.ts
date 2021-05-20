@@ -1,5 +1,6 @@
 import { GLSLObject } from "./object";
 
+
 /**
  * GLSL shader.
  */
@@ -61,7 +62,7 @@ export class GLSLShader extends GLSLObject<WebGLContext> {
    */
   public delete(): void {
     if (this.status !== undefined) {
-      this.gl.deleteShader(this.id);
+      this.gl.deleteShader(this._id);
 
       delete this._status;
     }

@@ -2,6 +2,8 @@ export default `#version 300 es
 layout (location = 0) in vec2 a_position;
 layout (location = 1) in vec2 a_uv_coord;
 
+uniform mat4 u_matrix;
+
 out vec2 v_uv_coord;
 
 void main() {

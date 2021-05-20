@@ -34,14 +34,12 @@ export abstract class GLSLObject<T extends WebGLContext> {
     return error;
   }
 
-  /** Get the ID */
+  /** Objcet ID */
   public get id(): WebGLObject | null {
     return this._id;
   }
 
-  /**
-   * Get the current status
-   */
+  /** Current status */
   public get status(): boolean {
     return this._status === true;
   }

@@ -1,11 +1,15 @@
 import { Separator } from "./separator";
 import { Button } from "./button";
 
+interface Props {
+  readonly onClose: () => void;
+}
+
 
 /**
  * Toolbar component
  */
-export const Toolbar = (): JSX.Element => {
+export const Toolbar = ({ onClose }: Props): JSX.Element => {
   return (
     <div className="flex bg-blueGray-300 text-blueGray-800 border-b border-blueGray-400 px-2 py-1">
       <div className="space-x-1">
@@ -37,7 +41,7 @@ export const Toolbar = (): JSX.Element => {
       </div>
 
       <div className="ml-auto">
-        <Button icon="times" onClick={undefined} />
+        <Button icon="times" onClick={onClose} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect, MutableRefObject, WheelEvent } from "react";
 
-import { GLSLPlane, GLSLProgram, GLSLShader } from "../../lib/glsl";
+import { GLSLPlane, GLSLProgram, GLSLShader, GLSLTexture2D } from "../../lib/glsl";
 
 import BG_VERT from "../../shaders/background.vert";
 import BG_FRAG from "../../shaders/background.frag";
@@ -8,7 +8,7 @@ import IMG_VERT from "../../shaders/image.vert";
 import IMG_FRAG from "../../shaders/image.frag";
 
 import { SCALE_FACTOR, MAX_SCALE } from "./scale";
-import { hexToRGBA, WHITE } from "./color";
+import { WHITE, hexToRGBA } from "./color";
 
 import { Error } from "./error";
 
@@ -36,6 +36,7 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
 
   const [ bgProgram, setBgProgram ] = useState<GLSLProgram>();
   const [ imgProgram, setImgProgram ] = useState<GLSLProgram>();
+  const [ texture, setTexture ] = useState<GLSLTexture2D>();
 
   const [ viewport, setViewport ] = useState({ width: 1, height: 1 });
   const [ minScale, setMinScale ] = useState(1);
@@ -65,8 +66,12 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
     const onerror = (error: string) => { setError(errors => errors.concat(error)); };
 
     // Initialize context
-    ctx.current = canvas.current.getContext(`webgl2`) as never;
+    ctx.current = canvas.current.getContext(`webgl2`, { alpha: false }) as never;
     const gl = ctx.current;
+
+    // Setup blending
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     // Background program
     const bgVert = new GLSLShader(gl, gl.VERTEX_SHADER, BG_VERT, onerror);
@@ -104,13 +109,27 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
       imgProgram.delete();
 
       GLSLPlane.delete(gl);
+
+      setTexture(texture => {
+        texture?.delete();
+        return undefined;
+      });
+
       setError([]);
     };
   }, []);
 
   // Update image
   useEffect(() => {
-    console.log(pic);
+    setTexture(texture => {
+      if (texture) {
+        texture.updateImageSource(pic);
+        return texture;
+      }
+
+      const gl = ctx.current;
+      return new GLSLTexture2D(gl, pic, 0, error => { setError(errors => errors.concat(error)); });
+    });
   }, [ pic ]);
 
   // Update minimum zoom
@@ -156,9 +175,7 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
 
   // Repaint context at render
   useEffect(() => {
-    if (!bgProgram || !imgProgram) {
-      return;
-    }
+    if (!bgProgram || !imgProgram) return;
 
     const gl = ctx.current;
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -171,7 +188,7 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
     }
 
     // Draw image
-    GLSLPlane.draw(gl);
+    if (texture?.status) GLSLPlane.draw(gl);
   });
 
 

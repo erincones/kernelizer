@@ -58,23 +58,17 @@ export class GLSLPlane {
     }
   }
 
-  /**
-   * Get the current status
-   */
+  /** Vertex array object */
   public static get vao(): WebGLVertexArrayObject | null {
     return GLSLPlane._vao;
   }
 
-  /**
-   * Get the current status
-   */
+  /** Vertex buffer object */
   public static get vbo(): WebGLBuffer | null {
     return GLSLPlane._vbo;
   }
 
-  /**
-   * Get the current status
-   */
+  /** Current status */
   public static get status(): boolean {
     return GLSLPlane._status === true;
   }

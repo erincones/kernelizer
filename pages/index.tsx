@@ -72,7 +72,7 @@ const Home = (): JSX.Element => {
           <Sidebar />
 
           <section className="flex flex-col flex-grow bg-trueGray-50 overflow-hidden">
-            <Toolbar />
+            <Toolbar onClose={() => { setImg(undefined); }} />
 
             <Error onClose={closeError}>
               {error}
