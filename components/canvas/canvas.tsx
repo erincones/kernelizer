@@ -82,6 +82,7 @@ export const Canvas = ({ img: pic, background = `#FFFFFF`, grid0 = background, g
     // Create square
     GLSLPlane.load(gl, onerror);
 
+
     // Viewport size management
     const cnt = container.current;
     const resizeHandler = () => {
@@ -116,14 +117,22 @@ export const Canvas = ({ img: pic, background = `#FFFFFF`, grid0 = background, g
     if (!pic) return;
 
     // Update minimum scale
-    const scaleMin = Math.min(1, viewport.width / pic.width, viewport.height / pic.height);
+    const ratioW = viewport.width / pic.width;
+    const ratioH = viewport.height / pic.height;
+    const scaleMin = Math.min(1, ratioW, ratioH);
+
     setMinScale(scaleMin);
     setScale(scale => scale < scaleMin ? scaleMin : scale);
 
-    // Orthogonal matrix
-    const w = scaleMin * pic.width / viewport.width;
-    const h = scaleMin * pic.height / viewport.height;
-    const matrix = Mat4.scaling(Mat4.identity(), [ w, h, 1 ]);
+    // Model matrix
+    const w = scaleMin / ratioW;
+    const h = scaleMin / ratioH;
+    const dx = viewport.width - (scaleMin * pic.width);
+    const dy = viewport.height - (scaleMin * pic.height);
+    const matrix = Mat4.identity();
+
+    Mat4.translate(matrix, matrix, [ dx % 2 ? 1 / viewport.width : 0, dy % 2 ? 1 / viewport.height : 0, 0 ]);
+    Mat4.scale(matrix, matrix, [ w, h, 1 ]);
 
     // Resize viewport
     const gl = ctx.current;
@@ -131,8 +140,9 @@ export const Canvas = ({ img: pic, background = `#FFFFFF`, grid0 = background, g
 
     gl.viewport(0, 0, viewport.width, viewport.height);
 
+    // Set uniforms
     prog.use();
-    gl.uniform2f(prog.getLocation(`u_viewport`), viewport.width, viewport.height);
+    gl.uniform2f(prog.getLocation(`u_offset`), dx / 2, viewport.height - dy / 2);
     gl.uniformMatrix4fv(prog.getLocation(`u_matrix`), false, matrix);
   }, [ pic, viewport ]);
 

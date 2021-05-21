@@ -12,6 +12,10 @@ export const WHITE: RGBA = new Float32Array([ 1, 1, 1, 1 ]) as never;
 /** Hexadecimal regex */
 const HEX = /^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/;
 
+/** Hexadecimal short regex */
+const HEX_SHORT = /^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/;
+
+
 /**
  * Parse hexadecimal color to RGBA color.
  *
@@ -19,6 +23,6 @@ const HEX = /^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/;
  * @returns RGBA color
  */
 export const hexToRGBA = (hex: string): RGBA | null => {
-  const color = hex.match(HEX);
+  const color = hex.match(HEX) || hex.match(HEX_SHORT);
   return color && new Float32Array(color.slice(1).map(ch => Number.parseInt(ch, 16) / 255).concat(1)) as never;
 };

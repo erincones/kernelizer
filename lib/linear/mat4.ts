@@ -97,7 +97,7 @@ export class Mat4 {
    * @param far Far bound of the frustum
    * @returns Orthogonal projection matrix
    */
-  public static ortho(out: Mat, left: number, right: number, top: number, bottom: number, near = -1, far = 1): Mat {
+  public static ortho(out: Mat, left: number, right: number, top: number, bottom: number, near: number, far: number): Mat {
     const lr = 1 / (left - right);
     const bt = 1 / (bottom - top);
     const nf = 1 / (near - far);
