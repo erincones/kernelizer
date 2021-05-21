@@ -28,7 +28,7 @@ export class Mat4 {
    * @param b Second matrix
    * @returns 4x4 matrix
    */
-  public static dot(out: Mat, a: Readonly<Mat>, b: Readonly<Mat>): Mat {
+  public static dot(out: Mat, a: Operand, b: Operand): Mat {
     const a00 = a[0];
     const a01 = a[1];
     const a02 = a[2];
@@ -86,13 +86,53 @@ export class Mat4 {
   }
 
   /**
+   * Creates an orthogonal projection matrix.
+   *
+   * @param out Destination
+   * @param left Left bound of the frustum
+   * @param right Right bound of the frustum
+   * @param top Top bound of the frustum
+   * @param bottom Bottom bound of the frustum
+   * @param near Near bound of the frustum
+   * @param far Far bound of the frustum
+   * @returns Orthogonal projection matrix
+   */
+  public static ortho(out: Mat, left: number, right: number, top: number, bottom: number, near = -1, far = 1): Mat {
+    const lr = 1 / (left - right);
+    const bt = 1 / (bottom - top);
+    const nf = 1 / (near - far);
+
+    out[0] = -2 * lr;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+
+    out[4] = 0;
+    out[5] = -2 * bt;
+    out[6] = 0;
+    out[7] = 0;
+
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 2 * nf;
+    out[11] = 0;
+
+    out[12] = (left + right) * lr;
+    out[13] = (top + bottom) * bt;
+    out[14] = (far + near) * nf;
+    out[15] = 1;
+
+    return out;
+  }
+
+  /**
    * Creates a 4x4 scaling matrix from the given vector.
    *
    * @param out Destination
    * @param vec Scaling vector
    * @returns 4x4 scaling matrix
    */
-  public static scaling(out: Mat, vec: Readonly<Mat>): Mat {
+  public static scaling(out: Mat, vec: Operand): Mat {
     out[0] = vec[0];
     out[1] = 0;
     out[2] = 0;
@@ -123,7 +163,7 @@ export class Mat4 {
    * @param vec Translation vector
    * @returns 4x4 translation matrix
    */
-  public static translation(out: Mat, vec: Readonly<Mat>): Mat {
+  public static translation(out: Mat, vec: Operand): Mat {
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -190,7 +230,7 @@ export class Mat4 {
    * @param vec Scale vector
    * @returns 4x4 matrix
    */
-  public static scale(out: Mat, mat: Readonly<Mat>, vec: Readonly<Mat>): Mat {
+  public static scale(out: Mat, mat: Operand, vec: Operand): Mat {
     const x = vec[0];
     const y = vec[1];
     const z = vec[2];
@@ -227,7 +267,7 @@ export class Mat4 {
    * @param vec Translate vector
    * @returns 4x4 matrix
    */
-  public static translate(out: Mat, mat: Readonly<Mat>, vec: Readonly<Mat>): Mat {
+  public static translate(out: Mat, mat: Operand, vec: Operand): Mat {
     const x = vec[0];
     const y = vec[1];
     const z = vec[2];
@@ -287,7 +327,7 @@ export class Mat4 {
    * @param rad Angle
    * @returns 4x4 matrix
    */
-  public static rotateZ(out: Mat, mat: Readonly<Mat>, rad: number): Mat {
+  public static rotateZ(out: Mat, mat: Operand, rad: number): Mat {
     const s = Math.sin(rad);
     const c = Math.cos(rad);
 

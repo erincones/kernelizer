@@ -17,7 +17,7 @@ export class Vec3 {
    * @param vec Vector
    * @returns Normalized vector
    */
-  public static normalize(out: Mat, vec: Readonly<Mat>): Mat {
+  public static normalize(out: Mat, vec: Operand): Mat {
     const len = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
 
     out[0] = vec[0] / len;

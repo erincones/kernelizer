@@ -26,7 +26,7 @@ export class GLSLTexture2D extends GLSLObject<WebGL2RenderingContext> {
     if (this._id === null) {
       GLSLTexture2D.handleError(`could not create the texture:\nunknown error`, onerror);
     }
-    else if (img) {
+    else {
       this.updateImageSource(img);
 
       this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_R, this.gl.CLAMP_TO_EDGE);

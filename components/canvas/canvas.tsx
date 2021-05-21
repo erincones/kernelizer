@@ -1,9 +1,8 @@
 import { useRef, useState, useCallback, useEffect, MutableRefObject, WheelEvent } from "react";
 
 import { GLSLPlane, GLSLProgram, GLSLShader, GLSLTexture2D } from "../../lib/glsl";
+import { Mat4 } from "../../lib/linear";
 
-import BG_VERT from "../../shaders/background.vert";
-import BG_FRAG from "../../shaders/background.frag";
 import IMG_VERT from "../../shaders/image.vert";
 import IMG_FRAG from "../../shaders/image.frag";
 
@@ -18,8 +17,9 @@ import { Error } from "./error";
  */
 interface Props {
   readonly img?: HTMLImageElement;
-  readonly foreground?: string;
   readonly background?: string;
+  readonly grid0?: string;
+  readonly grid1?: string;
   readonly onScaleChange?: (scale: number, min?: number, max?: number) => unknown;
 }
 
@@ -29,14 +29,13 @@ interface Props {
  *
  * @param props Canvas component properties
  */
-export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB`, onScaleChange }: Props): JSX.Element => {
+export const Canvas = ({ img: pic, background = `#FFFFFF`, grid0 = background, grid1 = grid0, onScaleChange }: Props): JSX.Element => {
   const container = useRef() as MutableRefObject<HTMLDivElement>;
   const canvas = useRef() as MutableRefObject<HTMLCanvasElement>;
   const ctx = useRef() as MutableRefObject<WebGL2RenderingContext>;
 
-  const [ bgProgram, setBgProgram ] = useState<GLSLProgram>();
-  const [ imgProgram, setImgProgram ] = useState<GLSLProgram>();
-  const [ texture, setTexture ] = useState<GLSLTexture2D>();
+  const program = useRef() as MutableRefObject<GLSLProgram>;
+  const texture = useRef() as MutableRefObject<GLSLTexture2D>;
 
   const [ viewport, setViewport ] = useState({ width: 1, height: 1 });
   const [ minScale, setMinScale ] = useState(1);
@@ -69,27 +68,19 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
     ctx.current = canvas.current.getContext(`webgl2`, { alpha: false }) as never;
     const gl = ctx.current;
 
-    // Setup blending
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-    // Background program
-    const bgVert = new GLSLShader(gl, gl.VERTEX_SHADER, BG_VERT, onerror);
-    const bgFrag = new GLSLShader(gl, gl.FRAGMENT_SHADER, BG_FRAG, onerror);
-    const bgProgram = new GLSLProgram(gl, bgVert, bgFrag, onerror);
-    bgProgram.deleteShaders();
-    setBgProgram(bgProgram);
-
     // Image program
-    const imgVert = new GLSLShader(gl, gl.VERTEX_SHADER, IMG_VERT, onerror);
-    const imgFrag = new GLSLShader(gl, gl.FRAGMENT_SHADER, IMG_FRAG, onerror);
-    const imgProgram = new GLSLProgram(gl, imgVert, imgFrag, onerror);
-    imgProgram.deleteShaders();
-    setImgProgram(imgProgram);
+    const vert = new GLSLShader(gl, gl.VERTEX_SHADER, IMG_VERT, onerror);
+    const frag = new GLSLShader(gl, gl.FRAGMENT_SHADER, IMG_FRAG, onerror);
+    const prog = new GLSLProgram(gl, vert, frag, onerror);
+    prog.deleteShaders();
+    program.current = prog;
+
+    // Create texture
+    const tex = new GLSLTexture2D(gl, null, 0, onerror);
+    texture.current = tex;
 
     // Create square
     GLSLPlane.load(gl, onerror);
-
 
     // Viewport size management
     const cnt = container.current;
@@ -105,15 +96,10 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
     return () => {
       window.addEventListener(`resize`, resizeHandler, true);
 
-      bgProgram.delete();
-      imgProgram.delete();
+      prog.delete();
 
       GLSLPlane.delete(gl);
-
-      setTexture(texture => {
-        texture?.delete();
-        return undefined;
-      });
+      tex.delete();
 
       setError([]);
     };
@@ -121,15 +107,7 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
 
   // Update image
   useEffect(() => {
-    setTexture(texture => {
-      if (texture) {
-        texture.updateImageSource(pic);
-        return texture;
-      }
-
-      const gl = ctx.current;
-      return new GLSLTexture2D(gl, pic, 0, error => { setError(errors => errors.concat(error)); });
-    });
+    texture.current.updateImageSource(pic);
   }, [ pic ]);
 
   // Update minimum zoom
@@ -142,31 +120,46 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
     setMinScale(scaleMin);
     setScale(scale => scale < scaleMin ? scaleMin : scale);
 
+    // Orthogonal matrix
+    const w = scaleMin * pic.width / viewport.width;
+    const h = scaleMin * pic.height / viewport.height;
+    const matrix = Mat4.scaling(Mat4.identity(), [ w, h, 1 ]);
+
     // Resize viewport
     const gl = ctx.current;
+    const prog = program.current;
+
     gl.viewport(0, 0, viewport.width, viewport.height);
 
-    if (bgProgram) {
-      bgProgram.use();
-      gl.uniform2f(bgProgram.getLocation(`viewport`), viewport.width, viewport.height);
-    }
-  }, [ pic, bgProgram, viewport ]);
+    prog.use();
+    gl.uniform2f(prog.getLocation(`u_viewport`), viewport.width, viewport.height);
+    gl.uniformMatrix4fv(prog.getLocation(`u_matrix`), false, matrix);
+  }, [ pic, viewport ]);
 
   // Update background
   useEffect(() => {
     const gl = ctx.current;
+    const prog = program.current;
 
-    // Foreground color
-    const foreColor = hexToRGBA(foreground) || WHITE;
-    gl.clearColor(...foreColor);
+    // Parse colors
+    const back = hexToRGBA(background) || WHITE;
 
-    // Background color
-    if (bgProgram) {
-      bgProgram.use();
-      gl.uniform4fv(bgProgram.getLocation(`fore`), foreColor);
-      gl.uniform4fv(bgProgram.getLocation(`back`), hexToRGBA(background) || WHITE);
-    }
-  }, [ bgProgram, foreground, background ]);
+    const color0 =
+      background === grid0 ? back :
+      hexToRGBA(grid0) || WHITE;
+
+    const color1 =
+      background === grid1 ? back :
+      grid0 === grid1 ? color0 :
+      hexToRGBA(grid1) || WHITE;
+
+    // Update colors
+    gl.clearColor(...back);
+
+    prog.use();
+    gl.uniform3f(prog.getLocation(`u_grid0`), color0[0], color0[1], color0[2]);
+    gl.uniform3f(prog.getLocation(`u_grid1`), color1[0], color1[1], color1[2]);
+  }, [ background, grid0, grid1 ]);
 
   // Trigger scale change
   useEffect(() => {
@@ -175,20 +168,13 @@ export const Canvas = ({ img: pic, foreground = `#FFFFFF`, background = `#DBDBDB
 
   // Repaint context at render
   useEffect(() => {
-    if (!bgProgram || !imgProgram) return;
-
+    // Reset
     const gl = ctx.current;
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // Draw background
-    if (foreground !== background) {
-      bgProgram.use();
-      GLSLPlane.draw(gl);
-      imgProgram.use();
-    }
-
     // Draw image
-    if (texture?.status) GLSLPlane.draw(gl);
+    program.current.use();
+    GLSLPlane.draw(gl);
   });
 
 

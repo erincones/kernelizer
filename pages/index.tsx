@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 
 import { SEO } from "../components/seo";
 
+import colors from "tailwindcss/colors";
 
 import { SecureContext } from "../components/secure-context";
 import { Sidebar } from "../components/sidebar";
@@ -83,6 +84,9 @@ const Home = (): JSX.Element => {
                 {img && (
                   <Canvas
                     img={img}
+                    background={colors.blueGray[`50`]}
+                    grid0="#FFFFFF"
+                    grid1="#DBDBDB"
                   />
                 )}
               </DragZone>

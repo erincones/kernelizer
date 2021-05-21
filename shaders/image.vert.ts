@@ -7,7 +7,7 @@ uniform mat4 u_matrix;
 out vec2 v_uv_coord;
 
 void main() {
-  v_uv_coord = a_uv_coord;
-  gl_Position = vec4(a_position, 0.0F, 1.0F);
+  v_uv_coord = vec2(a_uv_coord.x, 1.0F - a_uv_coord.y);
+  gl_Position = u_matrix * vec4(a_position, 0.0F, 1.0F);
 }
 `;

@@ -92,7 +92,7 @@ export const DragZone = ({ id, name = id, multiple, accept, loading, children, o
       onDragEnter={loading ? undefined : handleDrag}
       onDragOver={loading ? undefined : handleDrag }
       onDrop={loading ? undefined : handleDrop }
-      className="w-full h-full"
+      className="bg-blueGray-50 w-full h-full"
     >
       {loading ? ( // Loading
         <Spinner />
