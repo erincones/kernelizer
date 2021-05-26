@@ -1,5 +1,5 @@
 /** Color type */
-type RGBA = Readonly<[ number, number, number, number ]>;
+export type RGBA = Readonly<[ number, number, number, number ]>;
 
 
 /** Black */
