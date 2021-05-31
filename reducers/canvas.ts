@@ -1,5 +1,4 @@
 import { GLSLShader, GLSLProgram, GLSLTexture2D, GLSLPlane } from "../lib/glsl";
-import { Mat4 } from "../lib/linear";
 
 import { hexToRGBA, WHITE, RGBA } from "../helpers/color";
 
@@ -82,23 +81,15 @@ const render = (state: State): State => {
 
   // Reset context
   gl.clear(gl.COLOR_BUFFER_BIT);
-  program.use();
 
   // Render image
   if (img) {
-    // Model matrix
-    const matrix = Mat4.identity();
-    const dx = Math.ceil(x);
-    const dy = Math.ceil(y);
-    const w = scale * img.width / container.offsetWidth;
-    const h = scale * img.height / container.offsetHeight;
-
-    Mat4.translate(matrix, matrix, [ dx * 2 / container.offsetWidth + w - 1, 1 - h - dy * 2 / container.offsetHeight, 0 ]);
-    Mat4.scale(matrix, matrix, [ w, h, 1 ]);
-
     // Set uniforms
-    gl.uniform2f(program.getLocation(`u_offset`), dx, container.offsetHeight - dy);
-    gl.uniformMatrix4fv(program.getLocation(`u_matrix`), false, matrix);
+    program.use();
+    gl.uniform2f(program.getLocation(`u_canvas`), container.offsetWidth, container.offsetHeight);
+    gl.uniform2f(program.getLocation(`u_offset`), Math.trunc(x), Math.trunc(y));
+    gl.uniform2f(program.getLocation(`u_size`), img.width, img.height);
+    gl.uniform1f(program.getLocation(`u_scale`), scale);
 
     // Draw plane
     plane.draw();
@@ -122,7 +113,7 @@ const render = (state: State): State => {
 const initialize = (container: HTMLDivElement, canvas: HTMLCanvasElement): State => {
   // Error handler function
   const errors: string[] = [];
-  const onerror = (error: string) => { errors.concat(error); };
+  const onerror = (error: string) => { errors.push(error); };
 
   // Initialize context
   const gl = canvas.getContext(`webgl2`, { alpha: false }) as WebGL2RenderingContext;
@@ -258,6 +249,63 @@ const setBackground = (state: State, bg: string, g0 = bg, g1 = g0): State => {
 };
 
 /**
+ * Fit the image.
+ *
+ * @param state Current state
+ * @param scale New scale
+ * @returns Next state
+ */
+const fit = (state: State): State => {
+  const { container, img, scaleMin } = state;
+  const scale = scaleMin;
+
+  if (img && !state.fitted) {
+    return render({
+      ...state,
+      fitted: true,
+      x: (container.offsetWidth - scale * img.width) / 2,
+      y: (container.offsetHeight - scale * img.height) / 2,
+      scale
+    });
+  }
+
+  return state;
+};
+
+/**
+ * Fit the image.
+ *
+ * @param state Current state
+ * @param dx Horizontal displacement
+ * @param dy Vertical displacement
+ * @param scale New scale
+ * @returns Next state
+ */
+const translate = (state: State, dx: number, dy: number): State => {
+  const { container, img, scale, fitted } = state;
+
+  if (img && !fitted) {
+    const offset = {
+      x: container.offsetWidth - scale * img.width,
+      y: container.offsetHeight - scale * img.height
+    };
+
+    const x = offset.x < 0 ? Math.min(0, Math.max(state.x + dx, -offset.x)) : offset.x / 2;
+    const y = offset.y < 0 ? Math.min(0, Math.max(state.y + dy, -offset.y)) : offset.y / 2;
+
+    if ((x !== state.x) || (y !== state.y)) {
+      return render({
+        ...state,
+        x,
+        y
+      });
+    }
+  }
+
+  return state;
+};
+
+/**
  * Scale the image.
  *
  * @param state Current state
@@ -281,6 +329,18 @@ const scale = (state: State, scale: number): State => {
   return state;
 };
 
+const cleanUp = (state: State): State => {
+  const { program, texture, plane } = state;
+
+  program.delete();
+  texture.delete();
+  plane.delete();
+
+  return render({
+    ...state,
+    img: undefined
+  });
+};
 
 /** Initial canvas state */
 export const initialCanvas: State = {
@@ -317,10 +377,14 @@ export const canvasReducer = (state: State, action: Action): State => {
     case `SET_IMAGE`: return setImage(state, action.img);
     case `SET_BACKGROUND`: return setBackground(state, action.background, action.grid0, action.grid1);
 
+    case `FIT`: return fit(state);
+    case `TRANSLATE`: return translate(state, action.x, action.y);
+
     case `ZOOM_IN`: return scale(state, state.scale * SCALE_FACTOR);
     case `ZOOM_OUT`: return scale(state, state.scale / SCALE_FACTOR);
     case `SCALE`: return scale(state, action.scale);
 
-    default: return state;
+    case `CLOSE_ERRORS`: return { ...state, errors: [] };
+    case `CLEAN_UP`: return cleanUp(state);
   }
 };

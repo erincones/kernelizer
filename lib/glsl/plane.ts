@@ -7,13 +7,7 @@ import { GLSLObject } from "./object";
 export class GLSLPlane extends GLSLObject<WebGL2RenderingContext> {
   /** Plane data */
   public static readonly data: Readonly<Float32Array> = new Float32Array([
-    /* eslint-disable indent */
-    // Position   // Texture coordinates
-    -1,  1,       0, 1,
-    -1, -1,       0, 0,
-     1,  1,       1, 1,
-     1, -1,       1, 0
-    /* eslint-enable indent */
+    -1, 1, -1, -1, 1, 1, 1, -1
   ]);
 
   /** Vertex array object */
@@ -53,10 +47,7 @@ export class GLSLPlane extends GLSLObject<WebGL2RenderingContext> {
         gl.bufferData(gl.ARRAY_BUFFER, GLSLPlane.data, gl.STATIC_DRAW);
 
         gl.enableVertexAttribArray(0);
-        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
-
-        gl.enableVertexAttribArray(1);
-        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
       }
     }
   }
