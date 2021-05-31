@@ -15,7 +15,12 @@ module.exports = {
   darkMode: `class`,
   theme: {
     colors,
-    extend: {}
+    extend: {
+      cursor: {
+        grab: `grab`,
+        grabbing: `grabbing`
+      }
+    }
   },
   variants: {},
   plugins: [],

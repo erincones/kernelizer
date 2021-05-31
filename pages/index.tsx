@@ -61,7 +61,7 @@ const Home = (): JSX.Element => {
     <>
       <SEO title="Kernelizer" />
 
-      <div className="flex flex-col min-h-screen md:max-h-screen">
+      <div className="flex flex-col cursor-default min-h-screen md:max-h-screen">
         {/* Header */}
         <header className="bg-blueGray-600 text-center px-2 py-1">
           <h3 className="text-blueGray-100 text-xl font-bold">

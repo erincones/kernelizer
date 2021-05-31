@@ -49,16 +49,24 @@ type Action = {
 } | {
   readonly type: `FIT`;
 } | {
+  readonly type: `CLAMP_POSITION`;
+} | {
   readonly type: `TRANSLATE`;
-  readonly x: number;
-  readonly y: number;
+  readonly dx: number;
+  readonly dy: number;
 } | {
   readonly type: `SCALE`;
   readonly scale: number;
+  readonly x?: number;
+  readonly y?: number;
 } | {
   readonly type: `ZOOM_IN`;
+  readonly x?: number;
+  readonly y?: number;
 } | {
   readonly type: `ZOOM_OUT`;
+  readonly x?: number;
+  readonly y?: number;
 } | {
   readonly type: `CLOSE_ERRORS`;
 } | {
@@ -84,10 +92,19 @@ const render = (state: State): State => {
 
   // Render image
   if (img) {
+    // Clamp position
+    const offset = {
+      x: container.offsetWidth - scale * img.width,
+      y: container.offsetHeight - scale * img.height
+    };
+
+    const px = offset.x < 0 ? Math.min(0, Math.max(x, offset.x)) : offset.x / 2;
+    const py = offset.y < 0 ? Math.min(0, Math.max(y, offset.y)) : offset.y / 2;
+
     // Set uniforms
     program.use();
     gl.uniform2f(program.getLocation(`u_canvas`), container.offsetWidth, container.offsetHeight);
-    gl.uniform2f(program.getLocation(`u_offset`), Math.trunc(x), Math.trunc(y));
+    gl.uniform2f(program.getLocation(`u_offset`), Math.trunc(px), Math.trunc(py));
     gl.uniform2f(program.getLocation(`u_size`), img.width, img.height);
     gl.uniform1f(program.getLocation(`u_scale`), scale);
 
@@ -185,6 +202,7 @@ const resize = (state: State): State => {
   return render(state);
 };
 
+
 /**
  * Update image.
  *
@@ -248,6 +266,7 @@ const setBackground = (state: State, bg: string, g0 = bg, g1 = g0): State => {
   });
 };
 
+
 /**
  * Fit the image.
  *
@@ -273,7 +292,65 @@ const fit = (state: State): State => {
 };
 
 /**
- * Fit the image.
+ * Clamp image position.
+ *
+ * @param state Current state
+ * @returns Next state
+ */
+const clampPosition = (state: State): State => {
+  const { container, img, x, y, scale } = state;
+
+  if (img) {
+    const offset = {
+      x: container.offsetWidth - scale * img.width,
+      y: container.offsetHeight - scale * img.height
+    };
+
+    return {
+      ...state,
+      x: offset.x < 0 ? Math.min(0, Math.max(x, offset.x)) : offset.x / 2,
+      y: offset.y < 0 ? Math.min(0, Math.max(y, offset.y)) : offset.y / 2
+    };
+  }
+
+  return state;
+};
+
+
+/**
+ * Move the image to the given position.
+ *
+ * @param state Current state
+ * @param x Horizontal position
+ * @param y Vertical position
+ * @returns Next state
+ */
+const move = (state: State, x: number, y: number): State => {
+  const { container, img, scale } = state;
+
+  if (img) {
+    const offset = {
+      x: container.offsetWidth - scale * img.width,
+      y: container.offsetHeight - scale * img.height
+    };
+
+    const px = offset.x < 0 ? x : offset.x / 2;
+    const py = offset.y < 0 ? y : offset.y / 2;
+
+    if ((px !== state.x) || (py !== state.y)) {
+      return render({
+        ...state,
+        x: px,
+        y: py
+      });
+    }
+  }
+
+  return state;
+};
+
+/**
+ * Translate the image.
  *
  * @param state Current state
  * @param dx Horizontal displacement
@@ -282,23 +359,14 @@ const fit = (state: State): State => {
  * @returns Next state
  */
 const translate = (state: State, dx: number, dy: number): State => {
-  const { container, img, scale, fitted } = state;
+  const { img, fitted } = state;
 
   if (img && !fitted) {
-    const offset = {
-      x: container.offsetWidth - scale * img.width,
-      y: container.offsetHeight - scale * img.height
-    };
-
-    const x = offset.x < 0 ? Math.min(0, Math.max(state.x + dx, -offset.x)) : offset.x / 2;
-    const y = offset.y < 0 ? Math.min(0, Math.max(state.y + dy, -offset.y)) : offset.y / 2;
+    const x = isFinite(dx) ? state.x + dx : state.x;
+    const y = isFinite(dy) ? state.y + dy : state.y;
 
     if ((x !== state.x) || (y !== state.y)) {
-      return render({
-        ...state,
-        x,
-        y
-      });
+      return move(state, x, y);
     }
   }
 
@@ -312,23 +380,28 @@ const translate = (state: State, dx: number, dy: number): State => {
  * @param scale New scale
  * @returns Next state
  */
-const scale = (state: State, scale: number): State => {
-  const { container, img, scaleMin, scaleMax } = state;
+const scale = (state: State, scale: number, x = NaN, y = NaN): State => {
+  const { img, scaleMin, scaleMax } = state;
   const scaleNew = Math.min(scaleMax, Math.max(scaleMin, scale));
+  const factor = scaleNew / state.scale;
 
-  if (img && (state.scale !== scaleNew)) {
-    return render({
-      ...state,
-      fitted: false,
-      x: (container.offsetWidth - scaleNew * img.width) / 2,
-      y: (container.offsetHeight - scaleNew * img.height) / 2,
-      scale: scaleNew
-    });
+  if (img && (factor !== 1)) {
+    return move(
+      { ...state, fitted: false, scale: scaleNew },
+      isFinite(x) ? factor * (state.x - x) + x : 0,
+      isFinite(y) ? factor * (state.y - y) + y : 0
+    );
   }
 
   return state;
 };
 
+/**
+ * Release all resources.
+ *
+ * @param state Current state
+ * @returns Next state
+ */
 const cleanUp = (state: State): State => {
   const { program, texture, plane } = state;
 
@@ -341,6 +414,7 @@ const cleanUp = (state: State): State => {
     img: undefined
   });
 };
+
 
 /** Initial canvas state */
 export const initialCanvas: State = {
@@ -362,6 +436,7 @@ export const initialCanvas: State = {
   errors: []
 };
 
+
 /**
  * Canvas reducer
  *
@@ -378,11 +453,13 @@ export const canvasReducer = (state: State, action: Action): State => {
     case `SET_BACKGROUND`: return setBackground(state, action.background, action.grid0, action.grid1);
 
     case `FIT`: return fit(state);
-    case `TRANSLATE`: return translate(state, action.x, action.y);
+    case `CLAMP_POSITION`: return clampPosition(state);
 
-    case `ZOOM_IN`: return scale(state, state.scale * SCALE_FACTOR);
-    case `ZOOM_OUT`: return scale(state, state.scale / SCALE_FACTOR);
-    case `SCALE`: return scale(state, action.scale);
+    case `TRANSLATE`: return translate(state, action.dx, action.dy);
+
+    case `ZOOM_IN`: return scale(state, state.scale * SCALE_FACTOR, action.x, action.y);
+    case `ZOOM_OUT`: return scale(state, state.scale / SCALE_FACTOR, action.x, action.y);
+    case `SCALE`: return scale(state, action.scale, action.x, action.y);
 
     case `CLOSE_ERRORS`: return { ...state, errors: [] };
     case `CLEAN_UP`: return cleanUp(state);
