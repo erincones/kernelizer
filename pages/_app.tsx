@@ -42,6 +42,8 @@ const App = ({ Component, pageProps }: AppProps): ReactNode => {
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
         <link rel="shortcut icon" type="image/x-icon" sizes="16x16" href="/favicon.ico" />
+
+        <link rel="manifest" href="/manifest.json" />
       </Head>
 
       <Component {...pageProps} />
