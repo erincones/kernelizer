@@ -1,3 +1,6 @@
+/** WebGLObject */
+type WebGLObject = uknown;
+
 /** WebGL or WebGL2 rendering context */
 type WebGLContext = WebGLRenderingContext | WebGL2RenderingContext;
 
