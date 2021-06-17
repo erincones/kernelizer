@@ -4,9 +4,9 @@ module.exports = {
   purge: {
     mode: `all`,
     content: [
+      `node_modules/@fortawesome/**/*.js`,
       `pages/**/*.{js,ts,jsx,tsx}`,
-      `components/**/*.{js,ts,jsx,tsx}`,
-      `node_modules/@fortawesome/**/*.js`
+      `components/**/*.{js,ts,jsx,tsx}`
     ],
     options: {
       keyframes: true
